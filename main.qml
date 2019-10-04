@@ -22,14 +22,55 @@ ApplicationWindow{
                 font.pixelSize: 24
                 width: xApp.width
                 Keys.onReturnPressed: {
-                    speak()
+                    speak(ti.text)
                 }
             }
             Button{
                 text: 'Hablar'
                 onClicked: {
-                        speak()
+                    speak(ti.text)
                 }
+            }
+            Text{
+                text:'Detectar elemento'
+                font.pixelSize: 24
+                color: 'white'
+            }
+            Row{
+                id:row
+                spacing: 10
+                Repeater{
+                    id:rep
+                    model:['red', 'yellow', 'blue', 'brown', 'pink']
+                    property var a: ['rojo', 'amarillo', 'azul', 'marron', 'rosado']
+                    Rectangle{
+                        width: 50
+                        height: 50
+                        color: modelData
+                        border.width: focus?10:0
+                        border.color: "#ff8833"
+                        //focus: true
+                        KeyNavigation.tab: row.children[index+1]
+                        function runVoice(){
+                            timerSpeak.t='Sobre el color '+rep.a[index]
+                            timerSpeak.restart()
+                        }
+                        onFocusChanged: if(focus)runVoice()
+                        MouseArea{
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: {
+                                parent.runVoice()
+                                parent.focus=true
+                            }
+                            onClicked: {
+                                parent.runVoice()
+                                parent.focus=true
+                            }
+                        }
+                    }
+                }
+                Component.onCompleted: row.children[0].focus=true
             }
         }
     }
@@ -39,14 +80,24 @@ ApplicationWindow{
         sequence: 'Esc'
         onActivated: Qt.quit()
     }
-    function speak(){
+    Timer{
+        id: timerSpeak
+        running: false
+        repeat: false
+        interval: 2500
+        property string t: ''
+        onTriggered: {
+            speak(t)
+        }
+    }
+    function speak(t){
         var d=new Date(Date.now())
         var f=unik.getPath(2)+'/voice-'+d.getTime()+'.vbs'
-        var s='Dim speaks, speech\n'
-        s+='speaks="'+ti.text+'"\n'
-        s+='Set speech=CreateObject("sapi.spvoice")\n'
-        s+='speech.Speak speaks\n'
+        var s='Dim speaks, speech\r\n'
+        s+='speaks="'+t+'"\r\n'
+        s+='Set speech=CreateObject("sapi.spvoice")\r\n'
+        s+='speech.Speak speaks\r\n'
         unik.setFile(f,s)
-        unik.ejecutarLineaDeComandoAparte('cmd /c '+f)
+        unik.run('cmd /c '+f)
     }
 }
