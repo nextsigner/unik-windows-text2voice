@@ -49,8 +49,8 @@ ApplicationWindow{
                         color: modelData
                         border.width: focus?10:0
                         border.color: "#ff8833"
-                        //focus: true
-                        KeyNavigation.tab: row.children[index+1]
+                        objectName: 'rect'+index
+                        KeyNavigation.tab: index===3?row.children[5]: index===4?row.children[0]:row.children[index+1]
                         function runVoice(){
                             timerSpeak.t='Sobre el color '+rep.a[index]
                             timerSpeak.restart()
@@ -84,7 +84,7 @@ ApplicationWindow{
         id: timerSpeak
         running: false
         repeat: false
-        interval: 2500
+        interval: 1500
         property string t: ''
         onTriggered: {
             speak(t)
