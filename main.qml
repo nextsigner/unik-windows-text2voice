@@ -21,14 +21,38 @@ ApplicationWindow{
                 id: ti
                 font.pixelSize: 24
                 width: xApp.width
+                onFocusChanged: if(focus)runVoice('Escribir aquí un texto y presionar la tecla Enter')
+                KeyNavigation.tab: btnSpeak
                 Keys.onReturnPressed: {
                     speak(ti.text)
                 }
+                Rectangle{
+                    width: parent.width+10
+                    height: parent.height+10
+                    color: 'transparent'
+                    border.width: parent.focus?10:0
+                    border.color: "#ff8833"
+                    anchors.centerIn: parent
+                }
             }
             Button{
+                id:btnSpeak
                 text: 'Hablar'
+                onFocusChanged: {
+                    if(focus&&ti.text!=='')runVoice('Hacer click en este boton para hablar')
+                    if(focus&&ti.text==='')runVoice('El campo de texto esta vacio, ingrese un texto para poder convertirlo a voz.')
+                }
+                KeyNavigation.tab: row.children[0]
                 onClicked: {
                     speak(ti.text)
+                }
+                Rectangle{
+                    width: parent.width+10
+                    height: parent.height+10
+                    color: 'transparent'
+                    border.width: parent.focus?10:0
+                    border.color: "#ff8833"
+                    anchors.centerIn: parent
                 }
             }
             Text{
@@ -50,29 +74,25 @@ ApplicationWindow{
                         border.width: focus?10:0
                         border.color: "#ff8833"
                         objectName: 'rect'+index
-                        KeyNavigation.tab: index===3?row.children[5]: index===4?row.children[0]:row.children[index+1]
-                        function runVoice(){
-                            timerSpeak.t='Sobre el color '+rep.a[index]
-                            timerSpeak.restart()
-                        }
-                        onFocusChanged: if(focus)runVoice()
+                        KeyNavigation.tab: index===3?row.children[5]: index===4?ti:row.children[index+1]
+                        onFocusChanged: if(focus)runVoice('Sobre el color '+rep.a[index])
                         MouseArea{
                             anchors.fill: parent
                             hoverEnabled: true
                             onEntered: {
-                                parent.runVoice()
+                                runVoice('Sobre el color '+rep.a[index])
                                 parent.focus=true
                             }
                             onClicked: {
-                                parent.runVoice()
+                                runVoice('Sobre el color '+rep.a[index])
                                 parent.focus=true
                             }
                         }
                     }
-                }
-                Component.onCompleted: row.children[0].focus=true
+                }                
             }
         }
+        Component.onCompleted: ti.focus=true
     }
 
 
@@ -89,6 +109,10 @@ ApplicationWindow{
         onTriggered: {
             speak(t)
         }
+    }
+    function runVoice(t){
+        timerSpeak.t=t
+        timerSpeak.restart()
     }
     function speak(t){
         var d=new Date(Date.now())
