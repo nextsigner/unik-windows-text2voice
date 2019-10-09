@@ -1,9 +1,50 @@
+/*
+    Este código fué creado por @nextsigner
+    E-Mail: nextsigner@gmail.com
+
+    SELECCIONAR VOCES EN WINDOWS
+    Segun cómo esté configurado cada equipo
+
+    Voz Microsoft Zira Desktop - English (United States) unik.speak("Hola soy Sabina", 0) //English
+    Voz Microsoft Sabina Desktop - Spanish (Mexico) unik.speak("Hola soy Sabina", 1) //Español
+    Voz Microsoft Hazel Desktop - English (Great Britain) unik.speak("Hello, i am Hazel", 2)
+    Voz Microsoft Helena Desktop unik.speak("Hola soy Helena", 3) //Español
+*/
+
 import QtQuick 2.12
 import QtQuick.Controls 2.0
+import Qt.labs.settings 1.0
+import unik.UnikQProcess 1.0
 ApplicationWindow{
     id:app
     visibility:"Maximized"
     color: '#333'
+    Settings{
+        id:appSettings
+        property int voice
+    }
+    UnikQProcess{
+        id:uqp
+        onLogDataChanged: {
+            let m0 = logData.split('\n')
+            for(let i=0;i<m0.length;i++){
+                if(m0[i].indexOf(')')===m0[i].length-2&&m0[i].indexOf('Microsoft')>=0){
+                    console.log('uqp-: '+m0[i])
+                    cbLm.append(cbLm.addItem(m0[i]))
+                }
+            }
+        }
+        Component.onCompleted: {
+            let vbs ='Dim speech
+Set speech=CreateObject("sapi.spvoice")
+for i=0 to speech.GetVoices.Count-1 step 1
+      WScript.Echo speech.GetVoices.Item(i).GetDescription
+next'
+            let vbsFileName=unik.getPath(2)+'/count.vbs'
+            unik.setFile(vbsFileName, vbs)
+            run('cmd /c cscript '+vbsFileName)
+        }
+    }
     Item{
         id:xApp
         width:parent.width-48
@@ -17,6 +58,33 @@ ApplicationWindow{
                 font.pixelSize: 24
                 color: 'white'
             }
+            ComboBox{
+                id:cbVoices
+                width: parent.width
+                font.pixelSize: app.fs
+                model: cbLm
+                onCurrentTextChanged: {
+                    if(cbVoices.currentText===''){
+                        unik.speak("Se utilizará la voz configurada por defecto en el sistema.")
+                    }else{
+                        unik.speak("La voz seleccionada es "+cbVoices.currentText.replace(/\"/g, '').replace(/\r/g, '')+"",cbVoices.currentIndex)
+                    }
+                }
+                ListModel{
+                    id:cbLm
+                    function addItem(k, v){
+                        return{
+                                key: k,
+                                value: v
+                        }
+                    }
+                }
+            }
+            Text{
+                text:'Escribir un texto'
+                font.pixelSize: 24
+                color: 'white'
+            }
             TextField{
                 id: ti
                 font.pixelSize: 24
@@ -24,7 +92,7 @@ ApplicationWindow{
                 onFocusChanged: if(focus)runVoice('Escribir aquí un texto y presionar la tecla Enter')
                 KeyNavigation.tab: btnSpeak
                 Keys.onReturnPressed: {
-                    speak(ti.text)
+                    unik.speak(ti.text)
                 }
                 Rectangle{
                     width: parent.width+10
@@ -44,7 +112,7 @@ ApplicationWindow{
                 }
                 KeyNavigation.tab: row.children[0]
                 onClicked: {
-                    speak(ti.text)
+                    unik.speak(ti.text)
                 }
                 Rectangle{
                     width: parent.width+10
@@ -107,21 +175,15 @@ ApplicationWindow{
         interval: 1500
         property string t: ''
         onTriggered: {
-            speak(t)
+            if(cbVoices.currentText===''){
+                unik.speak(t)
+            }else{
+                unik.speak(t,cbVoices.currentIndex)
+            }
         }
     }
     function runVoice(t){
         timerSpeak.t=t
         timerSpeak.restart()
-    }
-    function speak(t){
-        var d=new Date(Date.now())
-        var f=unik.getPath(2)+'/voice-'+d.getTime()+'.vbs'
-        var s='Dim speaks, speech\r\n'
-        s+='speaks="'+t+'"\r\n'
-        s+='Set speech=CreateObject("sapi.spvoice")\r\n'
-        s+='speech.Speak speaks\r\n'
-        unik.setFile(f,s)
-        unik.run('cmd /c '+f)
-    }
+    }    
 }
