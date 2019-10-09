@@ -1,14 +1,6 @@
 /*
     Este código fué creado por @nextsigner
     E-Mail: nextsigner@gmail.com
-
-    SELECCIONAR VOCES EN WINDOWS
-    Segun cómo esté configurado cada equipo
-
-    Voz Microsoft Zira Desktop - English (United States) unik.speak("Hola soy Sabina", 0) //English
-    Voz Microsoft Sabina Desktop - Spanish (Mexico) unik.speak("Hola soy Sabina", 1) //Español
-    Voz Microsoft Hazel Desktop - English (Great Britain) unik.speak("Hello, i am Hazel", 2)
-    Voz Microsoft Helena Desktop unik.speak("Hola soy Helena", 3) //Español
 */
 
 import QtQuick 2.12
@@ -54,28 +46,41 @@ next'
             anchors.centerIn: parent
             spacing: 24
             Text{
-                text:'Escribir un texto'
+                text:'Voz Actual: '+(cbVoices.currentText===''?'Utilizando la voz por defecto del sistema':cbVoices.currentText)
                 font.pixelSize: 24
                 color: 'white'
             }
-            ComboBox{
-                id:cbVoices
-                width: parent.width
-                font.pixelSize: app.fs
-                model: cbLm
-                onCurrentTextChanged: {
-                    if(cbVoices.currentText===''){
-                        unik.speak("Se utilizará la voz configurada por defecto en el sistema.")
-                    }else{
-                        unik.speak("La voz seleccionada es "+cbVoices.currentText.replace(/\"/g, '').replace(/\r/g, '')+"",cbVoices.currentIndex)
-                    }
+            Row{
+                spacing: app.fs
+                Text{
+                    id:labelSelVoice
+                    text:'Seleccionar una voz: '
+                    font.pixelSize: 24
+                    color: 'white'
                 }
-                ListModel{
-                    id:cbLm
-                    function addItem(k, v){
-                        return{
+                ComboBox{
+                    id:cbVoices
+                    width: xApp.width-labelSelVoice.width//-app.fs
+                    font.pixelSize: app.fs
+                    model: cbLm
+                    onCurrentTextChanged: {
+                        let t
+                        if(cbVoices.currentText===''){
+                            t="Se utilizará la voz configurada por defecto en el sistema."
+                            unik.speak(t)
+                        }else{
+                            t=(cbVoices.currentText.indexOf('Spanish')>0?"La voz seleccionada es ":"The voice selected is ")+cbVoices.currentText.replace(/\r/g, '')+""
+                            unik.speak(t,cbVoices.currentIndex)
+                        }
+                        textSpeaked.text=t
+                    }
+                    ListModel{
+                        id:cbLm
+                        function addItem(k, v){
+                            return{
                                 key: k,
                                 value: v
+                            }
                         }
                     }
                 }
@@ -93,6 +98,7 @@ next'
                 KeyNavigation.tab: btnSpeak
                 Keys.onReturnPressed: {
                     unik.speak(ti.text)
+                    textSpeaked.text=ti.text
                 }
                 Rectangle{
                     width: parent.width+10
@@ -113,6 +119,7 @@ next'
                 KeyNavigation.tab: row.children[0]
                 onClicked: {
                     unik.speak(ti.text)
+                    textSpeaked.text=t
                 }
                 Rectangle{
                     width: parent.width+10
@@ -157,7 +164,30 @@ next'
                             }
                         }
                     }
-                }                
+                }
+            }
+            Item{
+                width: 1
+                height: 48
+            }
+            Text{
+                text:'Último texto reproducido'
+                font.pixelSize: 24
+                color: 'white'
+            }
+            Rectangle{
+                width: xApp.width
+                height: xApp.height*0.3
+                Text{
+                    id: textSpeaked
+                    font.pixelSize: 24
+                    width: parent.width-48
+                    wrapMode: Text.WordWrap
+                    anchors.top: parent.top
+                    anchors.topMargin: 24
+                    anchors.left: parent.left
+                    anchors.leftMargin: 24
+                }
             }
         }
         Component.onCompleted: ti.focus=true
@@ -180,10 +210,11 @@ next'
             }else{
                 unik.speak(t,cbVoices.currentIndex)
             }
+            textSpeaked.text=t
         }
     }
     function runVoice(t){
         timerSpeak.t=t
         timerSpeak.restart()
-    }    
+    }
 }
