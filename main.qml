@@ -34,7 +34,7 @@ for i=0 to speech.GetVoices.Count-1 step 1
 next'
             let vbsFileName=unik.getPath(2)+'/count.vbs'
             unik.setFile(vbsFileName, vbs)
-            run('cmd /c cscript '+vbsFileName)
+           run('cmd /c cscript '+vbsFileName)
         }
     }
     Item{
@@ -97,7 +97,11 @@ next'
                 onFocusChanged: if(focus)runVoice('Escribir aquí un texto y presionar la tecla Enter')
                 KeyNavigation.tab: btnSpeak
                 Keys.onReturnPressed: {
-                    unik.speak(ti.text)
+                    if(cbVoices.currentText===''){
+                        unik.speak(ti.text)
+                    }else{
+                        unik.speak(ti.text,cbVoices.currentIndex)
+                    }
                     textSpeaked.text=ti.text
                 }
                 Rectangle{
@@ -118,7 +122,11 @@ next'
                 }
                 KeyNavigation.tab: row.children[0]
                 onClicked: {
-                    unik.speak(ti.text)
+                    if(cbVoices.currentText===''){
+                        unik.speak(ti.text)
+                    }else{
+                        unik.speak(ti.text,cbVoices.currentIndex)
+                    }
                     textSpeaked.text=t
                 }
                 Rectangle{
