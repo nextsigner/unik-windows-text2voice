@@ -127,7 +127,7 @@ next'
                     }else{
                         unik.speak(ti.text,cbVoices.currentIndex)
                     }
-                    textSpeaked.text=t
+                    textSpeaked.text=ti.text
                 }
                 Rectangle{
                     width: parent.width+10
